@@ -1,9 +1,17 @@
+from dataclasses import dataclass
+
 import torch
 
-from mmlm.md.util import get_batch_info, compute_masses
+from mmlm.md.util import compute_masses
 
 
 class AtomStore:
+    @dataclass(frozen=True, eq=True, kw_only=True)
+    class BatchInfo:
+        start_idx: int
+        end_idx: int
+        num_atoms: int
+
     def __init__(self, batch_data: dict[str, dict]):
         self._validate_batch_data(batch_data)
 
@@ -17,16 +25,6 @@ class AtomStore:
         self.masses: torch.Tensor = compute_masses(
             self.batch_data['input_ids']['atoms'][:, self.batch_info.start_idx:self.batch_info.end_idx].squeeze(
                 0))
-
-    # @property
-    # def x(self) -> torch.Tensor:
-    #     return self.batch_data['input_ids']['numbers'][
-    #         :, self.batch_info.start_idx:self.batch_info.end_idx, :].squeeze(0)
-    #
-    # @x.setter
-    # def x(self, new_positions: torch.Tensor):
-    #     self.batch_data['input_ids']['numbers'][
-    #         :, self.batch_info.start_idx:self.batch_info.end_idx, :] = new_positions.unsqueeze(0)
 
     @staticmethod
     def _validate_batch_data(batch_data: dict):
@@ -52,3 +50,18 @@ class AtomStore:
         for key in required_labels_keys:
             if key not in labels_keys:
                 raise ValueError(f"Missing required key '{key}' in batch_data['labels'].")
+
+
+def get_batch_info(batch: dict) -> AtomStore.BatchInfo:
+    atoms = batch['input_ids']['atoms']
+    non_zero_elements = torch.nonzero(atoms)
+
+    num_atoms = len(non_zero_elements)
+    start_idx = non_zero_elements[0][1].item()
+    end_idx = non_zero_elements[-1][1].item()
+
+    return BatchInfo(
+        start_idx=start_idx,
+        end_idx=end_idx + 1,
+        num_atoms=num_atoms
+    )

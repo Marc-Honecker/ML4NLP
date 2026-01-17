@@ -26,14 +26,12 @@ from mmlm.custom_tokenizer import get_tokenizer
 from mmlm.trainers.molecule_trainer import MoleculeTrainer
 from mmlm.datasets_v2.core.binner import BinningSpec
 
-
 import os
 import numpy as np
 import random
 import logging
 from pathlib import Path
 import glob
-
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
@@ -85,10 +83,10 @@ def _validate_v2_config_consistency(cfg: DictConfig):
 
     # Assertions for flags that should not be set
     assert (
-        cfg.dataset.get("prior_path_train") is None
+            cfg.dataset.get("prior_path_train") is None
     ), "`dataset.prior_path_train` is not supported in v2."
     assert (
-        cfg.dataset.get("target_name") is None
+            cfg.dataset.get("target_name") is None
     ), "`dataset.target_name` is not supported in v2."
 
     # Injected flags from model config
@@ -110,17 +108,17 @@ def _validate_v2_config_consistency(cfg: DictConfig):
     formatter_target = cfg.dataset.train_dataset.cfg.formatter._target_
     if cfg.dataset.joint_embed_atoms:
         assert (
-            "AtomFormatter" in formatter_target
+                "AtomFormatter" in formatter_target
         ), "Mismatch: `dataset.joint_embed_atoms` is True but v2 formatter is not AtomFormatter."
     else:
         assert (
-            "StandardFormatter" in formatter_target
+                "StandardFormatter" in formatter_target
         ), "Mismatch: `dataset.joint_embed_atoms` is False but v2 formatter is not StandardFormatter."
 
     # Check for augmentation consistency
     transforms_list = [t._target_ for t in cfg.dataset.train_dataset.cfg.transforms]
     has_permutation = (
-        "mmlm.datasets_v2.core.transforms.PermutationTransform" in transforms_list
+            "mmlm.datasets_v2.core.transforms.PermutationTransform" in transforms_list
     )
     assert cfg.dataset.permutation_augmentation == has_permutation, (
         f"Mismatch: `dataset.permutation_augmentation` is {cfg.dataset.permutation_augmentation} but "
@@ -130,17 +128,16 @@ def _validate_v2_config_consistency(cfg: DictConfig):
     # Check for binning consistency
     for key, value in cfg.dataset.n_bins.items():
         assert (
-            bin_spec.n_bins[key] == value
+                bin_spec.n_bins[key] == value
         ), f"Bin mismatch for '{key}': legacy config has {value}, but bin spec has {bin_spec.n_bins[key]}."
 
 
 def get_model(args, tokenizer, start_end_indices_by_token_type):
-
     model_config_cls, model_cls = get_config_and_class(args.model.model_type)
 
     if "grad" in args.model.model_type:
         assert (
-            args.training.attn_implementation == "eager"
+                args.training.attn_implementation == "eager"
         ), "Gradient model requires eager attention implementation for double backwards!"
 
     energy_mean, energy_std, force_mean, force_std = 0, 1, 0, 1
@@ -151,8 +148,6 @@ def get_model(args, tokenizer, start_end_indices_by_token_type):
         force_mean = stats["force_mean"]
         force_std = stats["force_std"]
 
-    
-    
     max_force_per_batch = None
     if args.training.max_force_per_item is not None:
         max_force_per_batch = args.training.max_force_per_item * max(
@@ -161,11 +156,11 @@ def get_model(args, tokenizer, start_end_indices_by_token_type):
 
     multi_atom_embedding_dim = args.model.get("multi_atom_embedding_dim", None)
     if multi_atom_embedding_dim is not None and args.dataset.get(
-        "add_edge_features", False
+            "add_edge_features", False
     ):
         multi_atom_embedding_dim = (
-            multi_atom_embedding_dim
-            + args.dataset.max_bonds_per_atom * args.dataset.bond_features_dim
+                multi_atom_embedding_dim
+                + args.dataset.max_bonds_per_atom * args.dataset.bond_features_dim
         )
 
     continuous_config = model_config_cls(
@@ -252,10 +247,10 @@ def get_model(args, tokenizer, start_end_indices_by_token_type):
     # Calculate and log model size
     total_params = sum(p.numel() for p in model.parameters())
     logging.info(f"Total model parameters: {total_params:,}")
-    
+
     if (
-        args.training.resume_from_checkpoint == False
-        and args.training.checkpoint is not None
+            args.training.resume_from_checkpoint == False
+            and args.training.checkpoint is not None
     ):
         # Load state dict from checkpoint
         if args.training.fsdp_ckpt:
@@ -270,22 +265,22 @@ def get_model(args, tokenizer, start_end_indices_by_token_type):
                 import json
                 with open(index_path, 'r') as f:
                     index_data = json.load(f)
-                
+
                 weight_map = index_data.get("weight_map", {})
                 state_dict = {}
-                
+
                 # Group weights by file
                 file_weights = {}
                 for weight_name, file_name in weight_map.items():
                     if file_name not in file_weights:
                         file_weights[file_name] = []
                     file_weights[file_name].append(weight_name)
-                
+
                 # Load each shard file
                 for file_name, weight_names in file_weights.items():
                     file_path = f"{args.training.checkpoint}/{file_name}"
                     file_state_dict = load_file(file_path)
-                    
+
                     # Add only the weights that belong to this file
                     for weight_name in weight_names:
                         if weight_name in file_state_dict:
@@ -295,7 +290,7 @@ def get_model(args, tokenizer, start_end_indices_by_token_type):
                 state_dict = load_file(f"{args.training.checkpoint}/model.safetensors")
         # Filter out lm_head_number if finetuning
         if args.training.get("finetune", False) and args.training.get(
-            "replace_lm_head", True
+                "replace_lm_head", True
         ):
             state_dict = {
                 k: v
@@ -313,9 +308,9 @@ def get_model(args, tokenizer, start_end_indices_by_token_type):
                 k: v
                 for k, v in state_dict.items()
                 if not "energy_mean" in k
-                and not "energy_std" in k
-                and not "force_mean" in k
-                and not "force_std" in k
+                   and not "energy_std" in k
+                   and not "force_mean" in k
+                   and not "force_std" in k
             }
             logging.info(f"Chopping off norm stats!")
 
@@ -324,8 +319,8 @@ def get_model(args, tokenizer, start_end_indices_by_token_type):
             logging.info(f"Removing _orig_mod prefix from state dict!")
 
         strict = not (
-            args.training.get("finetune", False)
-            or args.model.model_type == "llama_prefix_readout"
+                args.training.get("finetune", False)
+                or args.model.model_type == "llama_prefix_readout"
         )
         # Load state dict into our model
         res = model.load_state_dict(state_dict, strict=strict)
@@ -335,15 +330,15 @@ def get_model(args, tokenizer, start_end_indices_by_token_type):
 
     # Convert model to bf16 if using flash_attention_2
     if (args.training.bf16 or args.training.fp16) and (
-        args.training.attn_implementation == "flash_attention_2"
-        or args.training.model_bf16
+            args.training.attn_implementation == "flash_attention_2"
+            or args.training.model_bf16
     ):
         dtype = torch.bfloat16 if args.training.bf16 else torch.float16
         model = model.to(dtype)
         logging.info(f"Setting model to half precision: {dtype}")
 
     if args.training.get("train_amount", None) is not None and not args.training.get(
-        "override_lr", False
+            "override_lr", False
     ):
         freeze_model(model, args.training.train_amount)
 
@@ -356,7 +351,6 @@ def get_model(args, tokenizer, start_end_indices_by_token_type):
 
 @hydra.main(version_base=None, config_path="configs", config_name="base")
 def main(args: DictConfig):
-
     if args.training.use_spawn:
         logging.info("Using spawn start method!")
         torch.multiprocessing.set_start_method("spawn", force=True)
@@ -637,7 +631,7 @@ def main(args: DictConfig):
         return model
 
     callbacks = [NaNLossCallback(cutoff=args.training.nan_loss_cutoff)]
-  
+
     trainer = MoleculeTrainer(
         model_init=model_init,
         args=training_args,
@@ -650,11 +644,11 @@ def main(args: DictConfig):
         preprocess_logits_for_metrics=(
             preprocess_logits_for_metrics
             if (
-                not args.training.full_eval
-                and (
-                    not args.dataset.continuous
-                    or args.model.loss_name in ["xent", "smooth_xent"]
-                )
+                    not args.training.full_eval
+                    and (
+                            not args.dataset.continuous
+                            or args.model.loss_name in ["xent", "smooth_xent"]
+                    )
             )
             else None
         ),
@@ -670,8 +664,8 @@ def main(args: DictConfig):
         pos_token_id=(
             start_end_indices_by_token_type["pos"][0]
             if (
-                args.training.get("finetune", False)
-                and args.training.get("ft_normalize_batch", False)
+                    args.training.get("finetune", False)
+                    and args.training.get("ft_normalize_batch", False)
             )
             else None
         ),
@@ -682,7 +676,6 @@ def main(args: DictConfig):
         muon_weight_decay=args.training.get("muon_weight_decay", 0.01),
     )
 
-    
     if args.training.checkpoint is not None and args.training.resume_from_checkpoint:
         trainer.train(resume_from_checkpoint=args.training.checkpoint)
     else:

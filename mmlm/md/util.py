@@ -1,6 +1,12 @@
-from dataclasses import dataclass
+import logging
+from typing import Any
 
 import torch
+from omegaconf import DictConfig
+from transformers import PreTrainedTokenizer
+
+from mmlm.custom_tokenizer import get_tokenizer
+from mmlm.utils.utils import get_n_actual_bins
 
 atom_id_to_mass_map = {
     1: 1.008,  # Hydrogen
@@ -33,23 +39,52 @@ def compute_masses(atom_types: torch.Tensor) -> torch.Tensor:
     return masses.unsqueeze(-1)
 
 
-@dataclass(frozen=True, eq=True, kw_only=True)
-class BatchInfo:
-    start_idx: int
-    end_idx: int
-    num_atoms: int
+def initialize_tokenizer(args: DictConfig) -> tuple[PreTrainedTokenizer, dict[Any, Any]]:
+    n_actual_bins = get_n_actual_bins(args)
 
+    if args.training.finetune:
+        assert (
+            not args.dataset.per_atom_target
+        ), "Per-atom target is already done in finetuning!"
+        if args.dataset.get("norm_stats_path", None) is None:
+            logging.warning(
+                "No norm stats path provided for finetuning! Using default values (0, 1) for energy and force mean and std."
+            )
 
-def get_batch_info(batch: dict) -> BatchInfo:
-    atoms = batch['input_ids']['atoms']
-    non_zero_elements = torch.nonzero(atoms)
+    if args.dataset.joint_embedding:
+        if n_actual_bins["pos"] > 15:
+            logging.warning(
+                f"The number of bins for position is greater than 15."
+            )
+        n_actual_bins["pos"] = n_actual_bins["pos"] ** 3
 
-    num_atoms = len(non_zero_elements)
-    start_idx = non_zero_elements[0][1].item()
-    end_idx = non_zero_elements[-1][1].item()
+    if args.dataset.joint_embedding_force and not args.training.finetune:
+        if n_actual_bins["force"] > 15:
+            logging.warning(
+                f"The number of bins for force is greater than 15. This may lead to a large number of tokens with joint embedding ({n_actual_bins['force'] ** 3})."
+            )
+        n_actual_bins["force"] = n_actual_bins["force"] ** 3
 
-    return BatchInfo(
-        start_idx=start_idx,
-        end_idx=end_idx + 1,
-        num_atoms=num_atoms
-    )
+    if args.dataset.n_bins is not None:
+        tokenizer = get_tokenizer(
+            n_bins=n_actual_bins,
+            n_atom_types=args.dataset.n_atom_types,
+            spin_min=args.dataset.spin_min,
+            spin_max=args.dataset.spin_max,
+            charge_min=args.dataset.charge_min,
+            charge_max=args.dataset.charge_max,
+            finetune=args.training.finetune,
+            joint_embed_atoms=args.dataset.joint_embed_atoms,
+        )
+        tokenizer.add_special_tokens(
+            {
+                "pad_token": "[PAD]",
+                "mask_token": "[MASK]",
+                "bos_token": "<BOS>",
+                "eos_token": "<EOS>",
+            }
+        )
+    else:
+        raise NotImplementedError("Need to discretize numbers from now on!")
+
+    return tokenizer, n_actual_bins
