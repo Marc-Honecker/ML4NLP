@@ -5,17 +5,12 @@ defaults:
   - /schedulers/cos_min_lr
 
 
-wandb:
-  group_name: flops_omol
-  run_name: 5M_final
-
 md:
-  n_steps: 20_000
+  n_steps: 2_000
   log_interval: 100
   dt: 0.1
 
 dataset:
-  # If null, use all data. Update for different scaling experiments.
   pipeline_v2: True
   training_percentage: null
   per_atom_target: false
