@@ -108,3 +108,38 @@ class PermutationTransform(Transform):
             mol.F = mol.F[perm]
 
         return mol
+
+
+class TranslationTransform(Transform):
+    """
+    Applies a random translation to the molecule.
+
+    This transform translates atomic positions by a random vector.
+    """
+
+    def __call__(self, mol: Molecule) -> Molecule:
+        """
+        Apply a random translation to the molecule.
+
+        Args:
+            mol: The input Molecule object.
+
+        Returns:
+            A new Molecule object with translated positions.
+        """
+        if not mol.has_cell:
+            raise ValueError("TranslationTransform requires the molecule to have a cell defined.")
+
+        # Determine translation range based on cell dimensions
+        cell_lengths = np.linalg.norm(mol.cell, axis=1)
+
+        # Generate a random translation vector
+        translation_vector = np.random.uniform(low=-3.0 * cell_lengths, high=3.0 * cell_lengths)
+
+        # Clone molecule to avoid modifying the original
+        mol = mol.clone()
+
+        # Apply translation
+        mol.R = mol.R + translation_vector
+
+        return mol
