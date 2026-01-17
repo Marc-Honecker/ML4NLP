@@ -1,4 +1,5 @@
 # Transformers Discover Molecular Structure Without Graph Priors
+
 <p align="center">
   <a href="https://arxiv.org/abs/2510.02259">
     <img src="https://img.shields.io/badge/arXiv-b31b1b?style=for-the-badge&logo=arxiv" alt="arXiv"/>
@@ -9,6 +10,14 @@
 </p>
 This is the implementation for "Transformers Discover Molecular Structure Without Graph Priors". We plan to continue rolling out improvements and updates to the code.
 
+## !!! Important !!!
+
+Please note that I kept **all** the original code from the authors, since I needed their code to get mine to work.
+My code is mostly located in the following directories/files:
+
+- `mmlm/md/*`: MD library
+- `mmlm/md_main`: main entry point for MD runs
+- `mmlm/configs/md/*`: My configs for MD runs
 
 ## Environment Setup
 
@@ -20,13 +29,16 @@ pip install -e .
 
 ## Example Train Command
 
-The configs expect data to be in a data folder in the directory of the repo (data/Omol/ for example). The path to data can be modified in the configs. Logs will be written to exp_logs. OMol data can be downloaded from [here](https://huggingface.co/facebook/OMol25).
+The configs expect data to be in a data folder in the directory of the repo (data/Omol/ for example). The path to data
+can be modified in the configs. Logs will be written to exp_logs. OMol data can be downloaded
+from [here](https://huggingface.co/facebook/OMol25).
 
 ```bash
 python -m mmlm.train +models=llama_57M_ch +omol_scaling_experiments=model_scaling wandb.group_name=omol_model_scaling wandb.run_name=57M training.batch_size=32 training.gradient_accumulation_steps=8
 ```
 
-Note that metadata files (energy and force mean/std) can be found [here](https://drive.google.com/file/d/17YvBVwQmr-VQFSJgSJbYwq2Z4Unma7Qw/view?usp=sharing).
+Note that metadata files (energy and force mean/std) can be
+found [here](https://drive.google.com/file/d/17YvBVwQmr-VQFSJgSJbYwq2Z4Unma7Qw/view?usp=sharing).
 
 ## Bibtex
 
