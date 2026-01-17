@@ -60,7 +60,7 @@ def get_batch_info(batch: dict) -> AtomStore.BatchInfo:
     start_idx = non_zero_elements[0][1].item()
     end_idx = non_zero_elements[-1][1].item()
 
-    return BatchInfo(
+    return AtomStore.BatchInfo(
         start_idx=start_idx,
         end_idx=end_idx + 1,
         num_atoms=num_atoms
