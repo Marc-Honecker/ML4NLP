@@ -1,6 +1,6 @@
 # @package _global_
 defaults:
-  - /models/llama_5M_ch
+  - /models/llama_90M_ch
   - /data/omol_4M
   - /schedulers/cos_min_lr
 
@@ -83,7 +83,7 @@ training:
   finetune: True
   ft_normalize_batch: True
   weight_decay: 0.0001
-  checkpoint: exp_logs/flops_omol/5M_final/checkpoint-3737610
+  checkpoint: exp_logs/flops_omol/90M_final/checkpoint-3737610
   max_force_per_item: 350
 
 model:
