@@ -8,7 +8,7 @@ defaults:
 md:
   n_steps: 10_000
   log_interval: 100
-  dt: 0.1
+  dt: 0.01
 
 dataset:
   pipeline_v2: True

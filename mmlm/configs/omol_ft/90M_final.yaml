@@ -7,7 +7,7 @@ defaults:
 
 wandb:
   group_name: flops_omol
-  run_name: 90M_final
+  run_name: 90M_final_conservative
 
 dataset:
   # If null, use all data. Update for different scaling experiments.
@@ -54,7 +54,7 @@ dataset:
       loader:
         _target_: mmlm.datasets_v2.loaders.omol_loader.OmolLoader
         path: data/Omol/val
-      transforms: [] # No augmentations for validation
+      transforms: [ ] # No augmentations for validation
       formatter:
         _target_: mmlm.datasets_v2.core.formatter.AtomFormatter
         finetune: True
@@ -70,7 +70,7 @@ training:
     min_lr: 0.00005
   torch_compile: True
   eval_steps: 500
-  dataloader_num_workers: 0
+  dataloader_num_workers: 32
   num_epochs: 30
   eval_batch_size: 64
   eval_accumulation_steps: 1
@@ -84,10 +84,9 @@ training:
   weight_decay: 0.0001
   checkpoint: null
   max_force_per_item: 350
-  fsdp: "shard_grad_op"
 
 model:
-  model_type: llama_pos_readout
+  model_type: llama_grad
   prefix_causal_mask: True
   mlp_output_head: True
   energy_head: True

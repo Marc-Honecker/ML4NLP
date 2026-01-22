@@ -16,7 +16,7 @@ class GradientModel(PositionReadoutModel):
     """
 
     def get_e_f_pred(self, hidden_states, pos_mask, input_ids):
-        raise NotImplementedError("CHeck whether we want sum or not here!")
+        # raise NotImplementedError("CHeck whether we want sum or not here!")
         energy_pred = self.lm_head_energy(hidden_states)
         energy_pred = (energy_pred.squeeze(-1) * pos_mask).sum(dim=-1, keepdim=True)
         force_pred = -torch.autograd.grad(

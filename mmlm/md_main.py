@@ -39,6 +39,8 @@ def run_md(args: DictConfig, batch: dict, model: PositionReadoutModel):
                 f"Step {step}, Energy: {energy.item():.4f}, Total Force Magnitude: {atom_store.f.norm().item():.4f}")
             print(
                 f"R[0].norm(): {atom_store.x[0, :].norm().item()}, V[0].norm(): {atom_store.v[0, :].norm().item()}, F[0].norm(): {atom_store.f[0, :].norm().item()}")
+            print(
+                f"R[1].norm(): {atom_store.x[1, :].norm().item()}, V[1].norm(): {atom_store.v[1, :].norm().item()}, F[0].norm(): {atom_store.f[1, :].norm().item()}")
             print()
 
         running_energy += energy.item()
