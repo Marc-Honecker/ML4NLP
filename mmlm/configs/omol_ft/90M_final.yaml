@@ -70,7 +70,7 @@ training:
     min_lr: 0.00005
   torch_compile: True
   eval_steps: 500
-  dataloader_num_workers: 32
+  dataloader_num_workers: 0
   num_epochs: 30
   eval_batch_size: 64
   eval_accumulation_steps: 1
