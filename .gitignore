@@ -15,4 +15,5 @@ mmlm.egg-info/
 omol_atoms/
 *.pkl
 data/Omol/
+data/Omol
 .idea
