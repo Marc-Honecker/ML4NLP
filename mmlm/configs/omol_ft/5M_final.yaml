@@ -69,7 +69,7 @@ training:
   lr: 0.00025
   lr_scheduler_kwargs:
     min_lr: 0.00005
-  torch_compile: True
+  torch_compile: False
   eval_steps: 500
   dataloader_num_workers: 0
   num_epochs: 30
