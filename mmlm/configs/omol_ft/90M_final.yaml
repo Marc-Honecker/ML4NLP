@@ -10,7 +10,7 @@ wandb:
   run_name: 90M_final_conservative
 
 dataset:
-  # If null, use all data. Update for different scaling experiments.
+  attn_implementation: "eager"
   pipeline_v2: True
   training_percentage: null
   per_atom_target: false

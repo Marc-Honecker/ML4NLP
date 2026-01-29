@@ -61,6 +61,7 @@ dataset:
       bin_spec_path: data/bins/omol_joint_bins_10_10_2048.npz
 
 training:
+  attn_implementation: "eager"
   bf16: True
   batch_size: 4
   gradient_accumulation_steps: 8
