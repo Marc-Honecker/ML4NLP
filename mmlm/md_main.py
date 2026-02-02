@@ -5,6 +5,7 @@ from omegaconf import DictConfig
 from mmlm.datasets_v2 import TextDataset
 from mmlm.md.AtomStore import AtomStore
 from mmlm.md.Potential import GraphFreeMLIP
+from mmlm.md.measurements import CenterOfMass
 from mmlm.md.propagator import LeapFrogVerletPropagator
 from mmlm.md.util import initialize_tokenizer
 from mmlm.models.pos_readout_model import PositionReadoutModel
@@ -19,6 +20,8 @@ def run_md(args: DictConfig, batch: dict, model: PositionReadoutModel):
     propagator = LeapFrogVerletPropagator()
     potential = GraphFreeMLIP(model=model)
 
+    com_measurer = CenterOfMass(dirname="outputs/run2/")
+
     n_steps = args.md.n_steps
     dt = args.md.dt
     log_interval = args.md.log_interval
@@ -31,21 +34,16 @@ def run_md(args: DictConfig, batch: dict, model: PositionReadoutModel):
 
         propagator.propagate(atom_store=atom_store, dt=dt)
 
-        if step % log_interval == 0:
-            print(
-                f"Reference Energy: {batch['labels']['target_labels'].item():.4f}"
-            )
-            print(
-                f"Step {step}, Energy: {energy.item():.4f}, Total Force Magnitude: {atom_store.f.norm().item():.4f}")
-            print(
-                f"R[0].norm(): {atom_store.x[0, :].norm().item()}, V[0].norm(): {atom_store.v[0, :].norm().item()}, F[0].norm(): {atom_store.f[0, :].norm().item()}")
-            print(
-                f"R[1].norm(): {atom_store.x[1, :].norm().item()}, V[1].norm(): {atom_store.v[1, :].norm().item()}, F[0].norm(): {atom_store.f[1, :].norm().item()}")
-            print()
+        if (step + 1) % log_interval == 0:
+            print(f"Step {step}/{n_steps}, Potential Energy: {energy.item():.4f}")
+
+            com_measurer.compute(atom_store, time=step * dt)
 
         running_energy += energy.item()
 
     print(running_energy / n_steps)
+
+    com_measurer.write_measurements_to_file()
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="base")
