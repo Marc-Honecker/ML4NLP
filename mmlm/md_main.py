@@ -1,3 +1,8 @@
+import os
+from pathlib import Path
+from datetime import datetime
+import json
+
 import torch
 import hydra
 from omegaconf import DictConfig
@@ -15,12 +20,34 @@ from mmlm.utils.utils import get_start_end_indices_by_token_type, get_collator
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
+def write_out_metadata(outdir: str, args: DictConfig, batch: dict):
+    if not os.path.exists(os.path.dirname(outdir)):
+        os.makedirs(os.path.dirname(outdir))
+
+    metadata_path = Path(os.path.join(outdir, "metadata.json"))
+    metadata = {
+        "checkpoint": args.training.checkpoint,
+        "molecule_idx": args.dataset.molecule_idx,
+        "n_steps": args.md.n_steps,
+        "dt": args.md.dt,
+        "log_interval": args.md.log_interval,
+        "reference_energy": batch['labels']['target_labels'].item(),
+    }
+
+    with metadata_path.open("w") as f:
+        json.dump(metadata, f, indent=4)
+
+
 def run_md(args: DictConfig, batch: dict, model: PositionReadoutModel):
     atom_store = AtomStore(batch)
     propagator = LeapFrogVerletPropagator()
     potential = GraphFreeMLIP(model=model)
 
-    com_measurer = CenterOfMass(dirname="outputs/run2/")
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    output_dir = f"md_outputs/{timestamp}/"
+    write_out_metadata(output_dir, args, batch)
+
+    com_measurer = CenterOfMass(dirname=output_dir)
 
     n_steps = args.md.n_steps
     dt = args.md.dt
@@ -34,9 +61,8 @@ def run_md(args: DictConfig, batch: dict, model: PositionReadoutModel):
 
         propagator.propagate(atom_store=atom_store, dt=dt)
 
-        if (step + 1) % log_interval == 0:
+        if step % log_interval == 0:
             print(f"Step {step}/{n_steps}, Potential Energy: {energy.item():.4f}")
-
             com_measurer.compute(atom_store, time=step * dt)
 
         running_energy += energy.item()
