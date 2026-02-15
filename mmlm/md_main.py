@@ -10,7 +10,7 @@ from omegaconf import DictConfig
 from mmlm.datasets_v2 import TextDataset
 from mmlm.md.AtomStore import AtomStore
 from mmlm.md.Potential import GraphFreeMLIP
-from mmlm.md.measurements import CenterOfMass
+from mmlm.md.measurements import CenterOfMass, PotentialEnergyRegister
 from mmlm.md.propagator import LeapFrogVerletPropagator
 from mmlm.md.util import initialize_tokenizer
 from mmlm.models.pos_readout_model import PositionReadoutModel
@@ -48,6 +48,7 @@ def run_md(args: DictConfig, batch: dict, model: PositionReadoutModel):
     write_out_metadata(output_dir, args, batch)
 
     com_measurer = CenterOfMass(dirname=output_dir)
+    potential_energy_register = PotentialEnergyRegister(dirname=output_dir)
 
     n_steps = args.md.n_steps
     dt = args.md.dt
@@ -64,12 +65,14 @@ def run_md(args: DictConfig, batch: dict, model: PositionReadoutModel):
         if step % log_interval == 0:
             print(f"Step {step}/{n_steps}, Potential Energy: {energy.item():.4f}")
             com_measurer.compute(atom_store, time=step * dt)
+            potential_energy_register.record(energy.item(), time=step * dt)
 
         running_energy += energy.item()
 
     print(running_energy / n_steps)
 
     com_measurer.write_measurements_to_file()
+    potential_energy_register.write_measurements_to_file()
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="base")

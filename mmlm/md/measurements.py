@@ -48,3 +48,26 @@ class CenterOfMass:
 
         with open(self._dirname + "rog.npy", "w") as file:
             file.write(rog_string)
+
+
+class PotentialEnergyRegister:
+    def __init__(self, dirname: str):
+        self._potential_energies = []
+        self._timesteps = []
+        self._dirname = dirname
+
+        if not os.path.exists(os.path.dirname(dirname)):
+            os.makedirs(os.path.dirname(dirname))
+
+    def record(self, energy: float, time: float):
+        print(energy, time)
+        self._potential_energies.append(energy)
+        self._timesteps.append(time)
+
+    def write_measurements_to_file(self):
+        energy_string = "# Potential Energy (time, energy)\n"
+        for timestep, energy in zip(self._timesteps, self._potential_energies):
+            energy_string += f"{timestep:.4f},{energy:.6f}\n"
+
+        with open(self._dirname + 'potential_energy.npy', "w") as file:
+            file.write(energy_string)
