@@ -60,7 +60,6 @@ class PotentialEnergyRegister:
             os.makedirs(os.path.dirname(dirname))
 
     def record(self, energy: float, time: float):
-        print(energy, time)
         self._potential_energies.append(energy)
         self._timesteps.append(time)
 
