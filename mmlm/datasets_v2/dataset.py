@@ -25,12 +25,12 @@ class TextDataset(Dataset):
     """
 
     def __init__(
-        self,
-        loader: BaseLoader,
-        formatter: Formatter,
-        bin_spec: BinningSpec,
-        transforms: Optional[List[Transform]] = None,
-        first_force_only: bool = False,
+            self,
+            loader: BaseLoader,
+            formatter: Formatter,
+            bin_spec: BinningSpec,
+            transforms: Optional[List[Transform]] = None,
+            first_force_only: bool = False,
     ):
         """
         Initialize the TextDataset.

@@ -129,13 +129,13 @@ class OmolLoader(BaseLoader):
     )
 
     def __init__(
-        self,
-        path: str,
-        center: bool = True,
-        indices: Optional[np.ndarray] = None,
-        force_prior_path: Optional[str] = None,
-        per_atom_target: bool = False,
-        first_force_only: bool = False,
+            self,
+            path: str,
+            center: bool = True,
+            indices: Optional[np.ndarray] = None,
+            force_prior_path: Optional[str] = None,
+            per_atom_target: bool = False,
+            first_force_only: bool = False,
     ):
         """
         Initialize the OmolLoader.
@@ -185,7 +185,7 @@ class OmolLoader(BaseLoader):
 
         if self.per_atom_target:
             reference_energy = reference_energy / data.pos.shape[0]
-        
+
         # Center positions if configured
         positions = data.pos - data.pos.mean(dim=0) if self.center else data.pos
 
