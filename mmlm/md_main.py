@@ -60,12 +60,12 @@ def run_md(args: DictConfig, batch: dict, model: PositionReadoutModel):
         energy, forces = potential.compute_total_potential_energy_and_forces(atom_store)
         atom_store.f = forces
 
-        propagator.propagate(atom_store=atom_store, dt=dt)
-
         if step % log_interval == 0:
             print(f"Step {step}/{n_steps}, Potential Energy: {energy.item():.4f}")
             com_measurer.compute(atom_store, time=step * dt)
             potential_energy_register.record(energy.item(), time=step * dt)
+
+        propagator.propagate(atom_store=atom_store, dt=dt)
 
         running_energy += energy.item()
 
