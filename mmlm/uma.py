@@ -53,8 +53,8 @@ def main():
         timestep=dt * units.fs
     )
 
-    dyn.attach(MDLogger(dyn, atoms, output_dir + "md.log", header=True, stress=False, peratom=False), interval=10)
-    dyn.attach(log_properties, interval=1, atoms=atoms, output_dir=output_dir)
+    dyn.attach(MDLogger(dyn, atoms, output_dir + "md.log", header=True, stress=False, peratom=False), interval=50)
+    dyn.attach(log_properties, interval=50, atoms=atoms, output_dir=output_dir)
     dyn.run(steps=n_steps)
 
 
