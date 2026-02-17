@@ -23,14 +23,28 @@ class CenterOfMass:
         masses (torch.Tensor): Tensor of shape (N,) representing the masses of N atoms.
         """
         positions = atom_store.x
-        masses = atom_store.masses
+        masses = atom_store.masses.flatten()
 
-        total_mass = torch.sum(masses)
-        com = torch.sum(positions * masses, dim=0) / total_mass
-        r2_g = torch.mean((positions - com) ** 2)
+        # Ensure correct shapes
+        assert positions.ndim == 2 and positions.shape[1] == 3
+        assert masses.ndim == 1
+        assert positions.shape[0] == masses.shape[0]
+
+        # Total mass
+        total_mass = masses.sum()
+
+        # Center of mass
+        com = (positions * masses[:, None]).sum(dim=0) / total_mass
+
+        # Squared distances per atom
+        squared_dist = ((positions - com) ** 2).sum(dim=1)
+
+        # Radius of gyration
+        rg_squared = (masses * squared_dist).sum() / total_mass
+        rg = torch.sqrt(rg_squared)
 
         self._com_positions.append(com)
-        self._radius_of_gyration.append(r2_g.sqrt().item())
+        self._radius_of_gyration.append(rg.item())
         self._timesteps.append(time)
 
     def write_measurements_to_file(self):
